@@ -16,8 +16,6 @@ const BLOCK_SIZE: u32 = 0x2_00_00;
 pub struct Arguments {
     #[arg(short, long, default_value_t = 1)]
     version: usize,
-    #[arg(short, long, default_value_t = false)]
-    surgeon: bool,
     #[arg(short, long, default_value = "kernel.cbf")]
     output: String,
     #[arg()]
@@ -26,25 +24,27 @@ pub struct Arguments {
 
 pub fn main() {
     let args = Arguments::parse();
-
+    
     let kernel_load = match args.version {
         1 => 0x80_00,
         2 => 0x10_00_00,
-        _ => panic!("Invalid Version Number!"),
+        _ => panic!("Unsupported CBF Version")
     };
 
     let kernel_jump = kernel_load;
-    let mut kernel_file = File::options().read(true).open(args.file_name).unwrap();
+
+
+    let mut kernel_file = File::options().read(true).open(args.file_name).expect("Unable to open given kernel file.");
     let mut output_file = File::options()
         .write(true)
         .create(true)
         .open(args.output)
-        .unwrap();
+        .expect("Unable to create given output file.");
 
     output_file.set_len(0).unwrap();
 
     let mut kernel_buf: Vec<u8> = Vec::new();
-    kernel_file.read_to_end(&mut kernel_buf).unwrap();
+    kernel_file.read_to_end(&mut kernel_buf).expect("Unable to read given kernel file."); 
     let kernel_buf_len = kernel_buf.len();
     println!("Buffer Len: {:#08x}", kernel_buf_len);
 
@@ -66,6 +66,7 @@ pub fn main() {
         written_len += written;
     }
 
+    // Pad with 0xFF
     while written_len % BLOCK_SIZE as usize != 0 {
         written_len += output_file.write(&[0xFF]).unwrap();
     }

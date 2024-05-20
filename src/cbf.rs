@@ -22,10 +22,11 @@ impl From<CBFSummary> for Vec<u8> {
 
 #[repr(C)]
 #[derive(Debug, Clone)]
+/// In memory representation of a CBF object.
 pub struct CBF {
     summary: CBFSummary,
     summary_crc: i32,
-    kernel_image: Vec<u8>,
+    kernel: Vec<u8>,
     kernel_crc: i32,
 }
 
@@ -49,6 +50,7 @@ impl CBF {
         self.kernel_crc
     }
 
+    /// Create a new CBF object.
     pub fn new(
         magic_number: i32,
         cbf_version: u32,
@@ -69,7 +71,7 @@ impl CBF {
         Self {
             summary,
             summary_crc,
-            kernel_image: kernel,
+            kernel,
             kernel_crc,
         }
     }
@@ -81,7 +83,7 @@ impl From<CBF> for Vec<u8> {
         let summary_bytes: Vec<u8> = value.summary.into();
         return_vec.extend(summary_bytes);
         return_vec.extend_from_slice(&value.summary_crc.to_le_bytes());
-        return_vec.extend(value.kernel_image);
+        return_vec.extend(value.kernel);
         return_vec.extend_from_slice(&value.kernel_crc.to_le_bytes());
         return_vec
     }
